@@ -1,0 +1,16 @@
+{
+  "name": "ac-route-profitability-discord-bot",
+  "version": "0.1.0",
+  "type": "module",
+  "main": "src/index.js",
+  "scripts": {
+    "start": "node src/index.js",
+    "dev": "NODE_ENV=development node src/index.js",
+    "register-commands": "node src/commands/routefinder.js --register"
+  },
+  "dependencies": {
+    "discord.js": "^14.15.3",
+    "dotenv": "^16.4.5",
+    "puppeteer": "^22.7.1"
+  }
+}

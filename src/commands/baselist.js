@@ -39,7 +39,11 @@ export async function execute(interaction) {
             return interaction.reply({ content: `The baselist for account "${accountName}" is currently empty.`, flags: 64 });
         }
         
-        const baseListString = iatas.map(iata => `• ${iata} (ID: ${baseAirports[iata]})`).join('\n');
+        const baseListString = iatas.map(iata => {
+            const base = baseAirports[iata];
+            const baseId = typeof base === 'object' ? base.id : base;
+            return `• ${iata} (ID: ${baseId})`;
+        }).join('\n');
         
         // --- (FIX) Using flags: 64 instead of ephemeral: true ---
         return interaction.reply({ content: `**Baselist for account "${accountName}":**\n${baseListString}`, flags: 64 });
@@ -61,7 +65,10 @@ export async function execute(interaction) {
             
             state.accounts[accountName].baseAirports = {
                 ...baseAirports,
-                [iata]: airport.id
+                [iata]: {
+                    id: airport.id,
+                    excludeAirports: {}
+                }
             };
             await saveState(state);
             

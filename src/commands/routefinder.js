@@ -1,6 +1,7 @@
 import { SlashCommandBuilder } from '@discordjs/builders';
 import * as planelist from './planelist.js';
 import * as baselist from './baselist.js';
+import * as excludelist from './excludelist.js';
 import * as run from './run.js';
 
 // Build the nested command structure
@@ -11,6 +12,7 @@ const builder = new SlashCommandBuilder()
 // Attach subcommands from other files
 planelist.subcommands(builder);
 baselist.subcommands(builder);
+excludelist.subcommands(builder);
 run.subcommands(builder);
 
 export const data = builder;
@@ -23,6 +25,9 @@ const handlers = {
     'baselist_add': baselist.execute,
     'baselist_delete': baselist.execute,
     'baselist_view': baselist.execute,
+    'excludelist_add': excludelist.execute,
+    'excludelist_delete': excludelist.execute,
+    'excludelist_view': excludelist.execute,
     'run': run.execute,
 };
 

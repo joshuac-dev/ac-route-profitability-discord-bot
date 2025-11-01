@@ -80,6 +80,26 @@ export async function loadState(forceRefresh = false) {
             if (!stateCache.accounts[accountName].baseAirports) {
                 stateCache.accounts[accountName].baseAirports = {};
             }
+            
+            // Migration: Convert old baseAirports format (IATA -> ID) to new format (IATA -> {id, excludeAirports})
+            const baseAirports = stateCache.accounts[accountName].baseAirports;
+            for (const iata of Object.keys(baseAirports)) {
+                if (typeof baseAirports[iata] !== 'object') {
+                    // Old format: just an ID number
+                    baseAirports[iata] = {
+                        id: baseAirports[iata],
+                        excludeAirports: {}
+                    };
+                } else if (!baseAirports[iata].excludeAirports) {
+                    // New format but missing excludeAirports
+                    baseAirports[iata].excludeAirports = {};
+                }
+            }
+            
+            // Remove old account-level excludeAirports if it exists
+            if (stateCache.accounts[accountName].excludeAirports) {
+                delete stateCache.accounts[accountName].excludeAirports;
+            }
         }
         
         return stateCache;

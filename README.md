@@ -8,8 +8,9 @@ This is a Discord bot for analyzing profitable flight routes in the game Airline
 -   Ranks and displays the top 10 most profitable routes per base.
 -   Uses your specified `planelist` to only consider planes you own.
 -   Calculates profit based on lowest competitor pricing or suggested price.
--   Manages state (accounts, account-specific planelist, account-specific baselist) in a `bot_state.json` file.
+-   Manages state (accounts, account-specific planelist, account-specific baselist with per-base excludelist) in a `bot_state.json` file.
 -   **Account-specific lists**: Each account has its own separate planelist and baselist, so you don't need to empty and reload lists when switching accounts.
+-   **Per-base excludelist feature**: Exclude specific airports from route scans for each base (e.g., DIY excluded for IST but not for FRA).
 
 ## Setup
 
@@ -86,3 +87,28 @@ You only need to do this once, or when you change commands.
 
 ```bash
 npm run deploy
+```
+
+## Usage
+
+Once the bot is running and commands are deployed, you can use the following Discord slash commands:
+
+### Planelist Commands
+- `/routefinder planelist_add account:<account-name> plane:<plane-name-or-id>` - Add a plane to your list
+- `/routefinder planelist_delete account:<account-name> plane:<plane-name-or-id>` - Remove a plane from your list
+- `/routefinder planelist_view account:<account-name>` - View all planes in your list
+
+### Baselist Commands
+- `/routefinder baselist_add account:<account-name> iata:<airport-code>` - Add a base airport
+- `/routefinder baselist_delete account:<account-name> iata:<airport-code>` - Remove a base airport
+- `/routefinder baselist_view account:<account-name>` - View all base airports
+
+### Excludelist Commands
+- `/routefinder excludelist_add account:<account-name> base:<base-iata> iata:<airport-code>` - Add an airport to exclude from scans for a specific base
+- `/routefinder excludelist_delete account:<account-name> base:<base-iata> iata:<airport-code>` - Remove an airport from the exclude list for a specific base
+- `/routefinder excludelist_view account:<account-name> base:<base-iata>` - View all excluded airports for a specific base
+
+### Run Analysis
+- `/routefinder run account:<account-name>` - Run the route profitability analysis
+
+**Note:** Excluded airports are per-base. For example, you can exclude DIY from IST scans but still include it for FRA scans. This is useful for airports you already have routes with from specific bases.

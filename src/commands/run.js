@@ -82,7 +82,7 @@ export async function execute(interaction) {
 
             console.log(`[RUN] Posting top ${routes.length} routes for ${baseIata}.`);
             const formattedResults = routes.map(route => 
-                `\`${route.fromIata} (${route.fromCity}) - ${route.toIata} (${route.toCity})\` - **$${route.score.toLocaleString()}**`
+                `\`${route.fromIata} (${route.fromCity}) - ${route.toIata} (${route.toCity})\` - **$${route.score.toLocaleString()}** - ${route.planeName}`
             ).join('\n');
             
             const embed = new EmbedBuilder()

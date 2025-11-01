@@ -2,9 +2,9 @@
   "accounts": {
     "main": {
       "username": "your-email@example.com",
-      "password": "your-game-password"
+      "password": "your-game-password",
+      "planeList": [],
+      "baseAirports": {}
     }
-  },
-  "planeList": [],
-  "baseAirports": {}
+  }
 }

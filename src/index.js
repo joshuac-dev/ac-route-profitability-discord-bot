@@ -34,7 +34,7 @@ try {
     process.exit(1);
 }
 
-client.once('ready', c => {
+client.once('clientReady', c => {
     console.log(`[INFO] Ready! Logged in as ${c.user.tag}`);
 });
 

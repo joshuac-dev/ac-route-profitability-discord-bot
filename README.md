@@ -83,11 +83,13 @@ EOF
 
 ### 4. Deploy Slash Commands
 
-You only need to do this once, or when you change commands.
+You need to do this once initially, and again whenever commands are updated (e.g., when new parameters are added).
 
 ```bash
 npm run deploy
 ```
+
+**Note:** After updating the code, you must re-run this command to register command changes with Discord.
 
 ## Usage
 

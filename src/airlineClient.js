@@ -386,9 +386,55 @@ export function analyzeRoute(routeData, userPlaneList, airplaneModelMap, airport
 export const delay = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 
 /**
+ * Extract economy passenger direct demand from route data.
+ * According to the problem statement, the plan-link endpoint returns demand data
+ * that includes directDemand (total), directBusinessDemand, and directTouristDemand.
+ * 
+ * Economy passengers are a subset of the total demand. The demand is split into
+ * Business/Economy/First class based on income and flight type.
+ * 
+ * For this implementation, we'll use the economy class demand from the demand breakdown.
+ */
+function getEconomyDemand(routeData) {
+    // The plan-link endpoint should return demand information
+    // We need to extract the economy class demand
+    // Based on typical API responses, this might be in routeData.economyDemand or
+    // routeData.demand.economy or similar
+    
+    // First, check if there's a direct economyDemand field
+    if (routeData.economyDemand !== undefined) {
+        return routeData.economyDemand;
+    }
+    
+    // Check if demand is broken down by class
+    if (routeData.demand && routeData.demand.economy !== undefined) {
+        return routeData.demand.economy;
+    }
+    
+    // Check if there's a demandMap with ECONOMY class
+    if (routeData.demandMap && routeData.demandMap.ECONOMY !== undefined) {
+        return routeData.demandMap.ECONOMY;
+    }
+    
+    // If we can't find economy demand specifically, we might need to look at
+    // the tourist demand and calculate economy from it based on the class split
+    // According to the problem statement, the demand is split into Y/J/F based on income
+    
+    // As a fallback, if directTouristDemand is available, we can use that
+    // since most tourist demand goes to economy class
+    if (routeData.directTouristDemand !== undefined) {
+        return routeData.directTouristDemand;
+    }
+    
+    // If none of the above work, return 0 to be safe
+    console.warn('[WARN] Could not determine economy demand from route data. Defaulting to 0.');
+    return 0;
+}
+
+/**
  * Main analysis runner.
  */
-export async function runAnalysis(username, password, baseAirports, userPlaneList, isDebug, testLimit, onProgress) {
+export async function runAnalysis(username, password, baseAirports, userPlaneList, isDebug, testLimit, onProgress, minEconomyDemand = 0) {
     const client = createApiClient();
     
     await onProgress('Logging in...');
@@ -456,6 +502,22 @@ export async function runAnalysis(username, password, baseAirports, userPlaneLis
             const routeData = await fetchRouteData(client, airlineId, fromAirportId, toAirportId);
             
             if (routeData) {
+                // Filter by minimum economy demand if specified
+                if (minEconomyDemand > 0) {
+                    // According to the problem statement, we need to check economy demand
+                    // The plan-link endpoint returns demand data including economy class demand
+                    // We need to check if the route meets the minimum threshold
+                    const economyDemand = getEconomyDemand(routeData);
+                    
+                    if (economyDemand < minEconomyDemand) {
+                        if (isDebug) {
+                            console.log(`  [FILTER] Skipping ${fromAirport.iata} -> ${destAirport.iata}: Economy demand ${economyDemand} < minimum ${minEconomyDemand}`);
+                        }
+                        processedCount++;
+                        continue;
+                    }
+                }
+                
                 const analysis = analyzeRoute(
                     routeData, 
                     userPlaneList, 

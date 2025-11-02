@@ -109,6 +109,8 @@ Once the bot is running and commands are deployed, you can use the following Dis
 - `/routefinder excludelist_view account:<account-name> base:<base-iata>` - View all excluded airports for a specific base
 
 ### Run Analysis
-- `/routefinder run account:<account-name>` - Run the route profitability analysis
+- `/routefinder run account:<account-name> [min_economy_demand:<number>]` - Run the route profitability analysis
+  - `account` (required): The account name to use for analysis
+  - `min_economy_demand` (optional): Minimum economy passenger direct demand a route must have to be included in the analysis. Routes with lower demand will be skipped.
 
 **Note:** Excluded airports are per-base. For example, you can exclude DIY from IST scans but still include it for FRA scans. This is useful for airports you already have routes with from specific bases.

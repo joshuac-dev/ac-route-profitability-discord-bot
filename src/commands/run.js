@@ -6,13 +6,15 @@ export const subcommands = (builder) =>
     builder.addSubcommand(sub => sub
         .setName('run')
         .setDescription('Run the route profitability analysis')
-        .addStringOption(opt => opt.setName('account').setDescription('The name of the account to use').setRequired(true)));
+        .addStringOption(opt => opt.setName('account').setDescription('The name of the account to use').setRequired(true))
+        .addIntegerOption(opt => opt.setName('min_economy_demand').setDescription('Minimum economy passenger direct demand (optional)').setRequired(false)));
 
 export async function execute(interaction) {
     // --- (FIX) Using flags: 64 instead of ephemeral: true ---
     await interaction.reply({ content: 'Starting analysis... This may take a long time. 🚀', flags: 64 });
     
     const accountName = interaction.options.getString('account');
+    const minEconomyDemand = interaction.options.getInteger('min_economy_demand') || 0;
     console.log(`[RUN] Starting analysis for account: ${accountName}`);
     
     const isDebug = process.env.DEBUG_LOGGING === 'true';
@@ -23,6 +25,9 @@ export async function execute(interaction) {
     }
     if (testLimit > 0) {
         console.log(`[RUN] *** TEST LIMIT IS ON: Will only scan ${testLimit} airports. ***`);
+    }
+    if (minEconomyDemand > 0) {
+        console.log(`[RUN] *** MIN ECONOMY DEMAND FILTER: ${minEconomyDemand} ***`);
     }
 
     const state = await loadState();
@@ -66,7 +71,8 @@ export async function execute(interaction) {
             account.planeList,
             isDebug,
             testLimit,
-            onProgress
+            onProgress,
+            minEconomyDemand
         );
 
         console.log('[RUN] Analysis complete. Posting results to Discord.');

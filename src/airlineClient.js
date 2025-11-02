@@ -395,39 +395,85 @@ export const delay = (ms) => new Promise(resolve => setTimeout(resolve, ms));
  * 
  * For this implementation, we'll use the economy class demand from the demand breakdown.
  */
-function getEconomyDemand(routeData) {
-    // The plan-link endpoint should return demand information
-    // We need to extract the economy class demand
-    // Based on typical API responses, this might be in routeData.economyDemand or
-    // routeData.demand.economy or similar
+function getEconomyDemand(routeData, isFirstCheck = false) {
+    // Check various possible locations for economy demand data
     
-    // First, check if there's a direct economyDemand field
+    // 1. Direct economyDemand field
     if (routeData.economyDemand !== undefined) {
         return routeData.economyDemand;
     }
     
-    // Check if demand is broken down by class
-    if (routeData.demand && routeData.demand.economy !== undefined) {
-        return routeData.demand.economy;
+    // 2. Demand broken down by class in a demand object
+    if (routeData.demand) {
+        if (routeData.demand.economy !== undefined) {
+            return routeData.demand.economy;
+        }
+        if (routeData.demand.ECONOMY !== undefined) {
+            return routeData.demand.ECONOMY;
+        }
     }
     
-    // Check if there's a demandMap with ECONOMY class
-    if (routeData.demandMap && routeData.demandMap.ECONOMY !== undefined) {
-        return routeData.demandMap.ECONOMY;
+    // 3. demandMap with class keys (LinkClassValues pattern)
+    if (routeData.demandMap) {
+        if (routeData.demandMap.ECONOMY !== undefined) {
+            return routeData.demandMap.ECONOMY;
+        }
+        if (routeData.demandMap.economy !== undefined) {
+            return routeData.demandMap.economy;
+        }
     }
     
-    // If we can't find economy demand specifically, we might need to look at
-    // the tourist demand and calculate economy from it based on the class split
-    // According to the problem statement, the demand is split into Y/J/F based on income
+    // 4. Check for capacity breakdown (some APIs use capacity)
+    if (routeData.capacity) {
+        if (routeData.capacity.ECONOMY !== undefined) {
+            return routeData.capacity.ECONOMY;
+        }
+        if (routeData.capacity.economy !== undefined) {
+            return routeData.capacity.economy;
+        }
+    }
     
-    // As a fallback, if directTouristDemand is available, we can use that
-    // since most tourist demand goes to economy class
+    // 5. Check linkClass or linkClassValues structure
+    if (routeData.linkClass) {
+        if (routeData.linkClass.ECONOMY !== undefined) {
+            return routeData.linkClass.ECONOMY;
+        }
+        if (routeData.linkClass.economy !== undefined) {
+            return routeData.linkClass.economy;
+        }
+    }
+    
+    // 6. Check if there's a demandInfo object
+    if (routeData.demandInfo) {
+        if (routeData.demandInfo.economy !== undefined) {
+            return routeData.demandInfo.economy;
+        }
+        if (routeData.demandInfo.ECONOMY !== undefined) {
+            return routeData.demandInfo.ECONOMY;
+        }
+    }
+    
+    // 7. Check directTouristDemand as a proxy
+    // According to the problem, tourist demand gets split into Y/J/F classes
+    // Most tourist demand typically goes to economy class
     if (routeData.directTouristDemand !== undefined) {
         return routeData.directTouristDemand;
     }
     
+    // If this is the first check and we can't find the data, log the structure
+    // to help with debugging
+    if (isFirstCheck) {
+        console.warn('[WARN] Could not find economy demand in expected locations.');
+        console.warn('[WARN] Available keys in routeData:', Object.keys(routeData).join(', '));
+        if (routeData.demand) {
+            console.warn('[WARN] Keys in routeData.demand:', Object.keys(routeData.demand).join(', '));
+        }
+        if (routeData.demandMap) {
+            console.warn('[WARN] Keys in routeData.demandMap:', Object.keys(routeData.demandMap).join(', '));
+        }
+    }
+    
     // If none of the above work, return 0 to be safe
-    console.warn('[WARN] Could not determine economy demand from route data. Defaulting to 0.');
     return 0;
 }
 
@@ -490,6 +536,7 @@ export async function runAnalysis(username, password, baseAirports, userPlaneLis
         
         let routeScores = [];
         let processedCount = 0;
+        let isFirstRoute = true;
 
         for (const destAirport of airportsToScan) {
             const toAirportId = destAirport.id;
@@ -507,7 +554,8 @@ export async function runAnalysis(username, password, baseAirports, userPlaneLis
                     // According to the problem statement, we need to check economy demand
                     // The plan-link endpoint returns demand data including economy class demand
                     // We need to check if the route meets the minimum threshold
-                    const economyDemand = getEconomyDemand(routeData);
+                    const economyDemand = getEconomyDemand(routeData, isFirstRoute);
+                    isFirstRoute = false;
                     
                     if (economyDemand < minEconomyDemand) {
                         if (isDebug) {
